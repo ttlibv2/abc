@@ -1,0 +1,6 @@
+{
+	"/web/*": {
+		"target": "https://web.ts24.com.vn/en_US/web",
+		"debug": "true"
+	}
+}
