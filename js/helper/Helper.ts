@@ -56,6 +56,10 @@ export class Helper {
 		else return (lhs || '').toLowerCase() === (rhs || '').toLowerCase();
 	}
 
+	static numberToHex(num: number): string {
+		return num.toString(16);
+	}
+
 	//==========================================================
 
 	static createEqualsBuilder(): EqualsBuilder {

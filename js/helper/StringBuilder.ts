@@ -22,8 +22,8 @@ export class StringBuilder {
 		return this;
 	}
 
-	appendCodePoint(codePoint: number): this {
-		this.text += String.fromCharCode(codePoint);
+	appendCodePoint(...codePoints: number[]): this {
+		this.text += codePoints.map((cp) => String.fromCharCode(cp)).join('');
 		return this;
 	}
 
