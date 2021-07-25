@@ -1,10 +1,10 @@
-import { StringReader } from '../helper/CharacterReader';
 import { ParseError, ParseErrorList } from './ParseError';
 import { TokeniserState } from './TokeniserState';
-import * as tk from './Token';
 import { StringBuilder } from '../helper/StringBuilder';
-import { Assert } from 'js/helper/Assert';
-import { Helper } from 'js/helper/Helper';
+import { Assert } from '../helper/Assert';
+import { Helper } from '../helper/Helper';
+import * as tk from './Token';
+import { CharacterReader } from './CharacterReader';
 
 export class Tokeniser {
 	static readonly replacementChar: string = '\uFFFD';
@@ -29,21 +29,21 @@ export class Tokeniser {
 	private isEmitPending: boolean = false;
 	private charsString: string = null; // characters pending an emit. Will fall to charsBuilder if more than one
 	private charsBuilder = new StringBuilder(); // buffers characters to output as one token, if more than one emit per read
-	private dataBuffer = new StringBuilder(); // buffers data looking for </script>
+	dataBuffer = new StringBuilder(); // buffers data looking for </script>
 
-	protected tagPending: tk.Tag; // tag we are building up
-	protected startPending = new tk.StartTag();
-	protected endPending = new tk.EndTag();
-	protected charPending = new tk.Character();
-	protected doctypePending = new tk.Doctype(); // doctype building up
-	protected commentPending = new tk.Comment(); // comment building up
+	tagPending: tk.Tag; // tag we are building up
+	startPending = new tk.StartTag();
+	endPending = new tk.EndTag();
+	charPending = new tk.Character();
+	doctypePending = new tk.Doctype(); // doctype building up
+	commentPending = new tk.Comment(); // comment building up
 	protected lastStartTag: string; // the last start tag emitted, to test appropriate end tag
 
 	protected readonly codepointHolder: number[] = [];
 	protected readonly multipointHolder: number[] = [];
 
 	constructor(
-		protected readonly reader: StringReader, //
+		protected readonly reader: CharacterReader, //
 		protected readonly errors: ParseErrorList,
 	) {}
 
@@ -95,9 +95,11 @@ export class Tokeniser {
 		}
 	}
 
-	emitString(str: string): void {
+	emitString(string: string | StringBuilder): void {
+		let str = string.toString();
+
 		if (this.charsString === null) {
-			this.charsString = str.toString();
+			this.charsString = str;
 		}
 		//
 		else {
@@ -218,5 +220,9 @@ export class Tokeniser {
 			}
 		}
 		return builder.toString();
+	}
+
+	consumeCharacterReference(arg0: string, arg1: boolean): string[] {
+		throw new Error('Method not implemented.');
 	}
 }

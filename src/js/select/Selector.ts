@@ -56,11 +56,7 @@ export abstract class Selector {
 		}
 
 		// fisrt is query && last is array element
-		else if (
-			typeof first === 'string' &&
-			Array.isArray(last) &&
-			last[0] instanceof Element
-		) {
+		else if (typeof first === 'string' && Array.isArray(last) && last[0] instanceof Element) {
 			Assert.notEmpty(first);
 			Assert.notNull(last);
 			let evaluator = QueryParser.parse(first);
@@ -77,7 +73,7 @@ export abstract class Selector {
 	static selectFirst(object: string | Evaluator, arg1: Element): Element {
 		throw new Error('Method not implemented.');
 	}
-	static filterOut(arg0: Element, out: Elements): Elements {
+	static filterOut(arg0: Element | Elements, out: Elements): Elements {
 		throw new Error('Method not implemented.');
 	}
 }

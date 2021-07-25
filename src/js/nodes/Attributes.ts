@@ -15,6 +15,9 @@ export type AttributeFilter = (attr: Attribute, index: number, array: Attribute[
  * That means you should use lower-case strings when referring to attributes by name.
  */
 export class Attributes {
+	dataset(): Record<string, string> {
+		throw new Error('Method not implemented.');
+	}
 	static readonly dataPrefix: string = 'data-';
 	static readonly InternalPrefix: string = '/';
 	private readonly attributes: Attribute[] = [];

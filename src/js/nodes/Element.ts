@@ -11,8 +11,6 @@ import { Selector } from '../select/Selector';
 import { Collector } from '../select/Collector';
 import { QueryParser } from '../select/QueryParser';
 import { Normalizer } from '../helper/Normalizer';
-import { NodeVisitor } from '../select/NodeVisitor';
-import { NodeTraversor } from '../select/NodeTraversor';
 import { Evaluator } from '../select/Evaluator';
 import { StringBuilder } from '../helper/StringBuilder';
 import * as EvalHelp from '../select/Evaluator';
@@ -34,6 +32,27 @@ class WeakReference<T> {
  * and manipulate the HTML.
  */
 export class Element extends Node {
+	html(html?: string): any {
+		throw new Error('Method not implemented.');
+	}
+	hasText(): unknown {
+		throw new Error('Method not implemented.');
+	}
+	val(val?: any): any {
+		throw new Error('Method not implemented.');
+	}
+	hasClass(className: string): unknown {
+		throw new Error('Method not implemented.');
+	}
+	toggleClass(className: string): void {
+		throw new Error('Method not implemented.');
+	}
+	removeClass(className: string): void {
+		throw new Error('Method not implemented.');
+	}
+	addClass(className: string): void {
+		throw new Error('Method not implemented.');
+	}
 	static readonly BaseUriKey = Attributes.internalKey('baseUri');
 
 	private tag: Tag;
@@ -181,7 +200,7 @@ export class Element extends Node {
 		while (el !== null) {
 			let attrs = el.get_attributes();
 			let hasKey = attrs !== null && attrs.hasKey(key);
-			if (hasKey) return attrs.get(key);
+			if (hasKey) return attrs.get(key).get_val();
 			else el = el.parentNode;
 		}
 		return '';
@@ -367,11 +386,9 @@ export class Element extends Node {
 	select(cssQuery: string): Elements;
 
 	/**
-	 * Find elements that match the supplied Evaluator. This has the same functionality as {@link #select(String)}, but
-	 * may be useful if you are running the same query many times (on many documents) and want to save the overhead of
-	 * repeatedly parsing the CSS query.
+	 * Find elements that match the supplied Evaluator.
 	 * @param evaluator an element evaluator
-	 * @return an {@link Elements} list containing elements that match the query (empty if none match)
+	 * @return an {@link Elements}
 	 */
 	select(evaluator: Evaluator): Elements;
 
@@ -381,22 +398,16 @@ export class Element extends Node {
 	}
 
 	/**
-	 * Find the first Element that matches the {@link Selector} CSS query, with this element as the starting context.
-	 * <p>This is effectively the same as calling {@code element.select(query).first()}, but is more efficient as query
-	 * execution stops on the first hit.</p>
-	 * <p>Also known as {@code querySelector()} in the Web DOM.</p>
+	 * Find the first Element that matches the {@link Selector} CSS query
 	 * @param cssQuery cssQuery a {@link Selector} CSS-like query
 	 * @return the first matching element, or <b>{@code null}</b> if there is no match.
 	 */
 	selectFirst(cssQuery: string): Element;
 
 	/**
-	 * Finds the first Element that matches the supplied Evaluator, with this element as the starting context, or
-	 * {@code null} if none match.
-	 *
+	 * Finds the first Element that matches the supplied Evaluator
 	 * @param evaluator an element evaluator
-	 * @return the first matching element (walking down the tree, starting from this element), or {@code null} if none
-	 *     matchn.
+	 * @return the first matching element
 	 */
 	selectFirst(evaluator: Evaluator): Element;
 
@@ -408,9 +419,7 @@ export class Element extends Node {
 	}
 
 	/**
-	 * Checks if this element matches the given {@link Selector} CSS query. Also knows as {@code matches()} in the Web
-	 * DOM.
-	 *
+	 * Checks if this element matches the given {@link Selector} CSS query.
 	 * @param cssQuery a {@link Selector} CSS query
 	 * @return if this element matches the query
 	 */
@@ -427,6 +436,9 @@ export class Element extends Node {
 	is(object: string | Evaluator): boolean {
 		let evaluator: Evaluator = typeof object === 'string' ? QueryParser.parse(<any>object) : object;
 		return evaluator.matches(this.root(), this);
+	}
+	root(): Element {
+		throw new Error('Method not implemented.');
 	}
 
 	/**
@@ -1129,5 +1141,12 @@ export class Element extends Node {
 				i++;
 			} while (i < 6 && node !== null);
 		}
+	}
+
+	outerHtmlHead(accum: StringBuilder, depth: number, setting: OutputSetting): void {
+		throw new Error('Method not implemented.');
+	}
+	outerHtmlTail(accum: StringBuilder, depth: number, setting: OutputSetting): void {
+		throw new Error('Method not implemented.');
 	}
 }

@@ -1,6 +1,7 @@
 import { Assert } from './Assert';
 import { StringBuilder } from './StringBuilder';
 import { EqualsBuilder } from './EqualsBuilder';
+import { Char } from './Char';
 
 export class Helper {
 	// so very deeply nested nodes don't get insane padding amounts
@@ -148,6 +149,14 @@ export class Helper {
 
 	static isLetterOrDigit(str: string): boolean {
 		return /^[0-9a-zA-Z]+$/.test(str);
+	}
+
+	static isLetter(str: string | Char): boolean {
+		return /^[a-zA-Z]+$/.test(str.toString());
+	}
+
+	static isDigit(str: string | Char): boolean {
+		return /^[0-9]+$/.test(str.toString());
 	}
 
 	// The minimum value of a Unicode supplementary code point, constant U+10000.

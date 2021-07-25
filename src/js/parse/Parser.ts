@@ -6,6 +6,7 @@ import { HtmlParse2Adapter, ParseApdater } from './Apdater';
 import { ParseSetting } from './Setting';
 import { ParseErrorList } from './ParseError';
 import { Tokeniser } from './Tokeniser';
+import { CharacterReader } from './CharacterReader';
 
 export class Parser {
 	// parse setting
@@ -130,7 +131,8 @@ export class Parser {
 	 * @return an unescaped string
 	 */
 	static unescapeEntities(string: string, inAttribute: boolean) {
-		let tokeniser = new Tokeniser(string, ParseErrorList.noTracking());
+		let reader = new CharacterReader(string);
+		let tokeniser = new Tokeniser(reader, ParseErrorList.noTracking());
 		return tokeniser.unescapeEntities(inAttribute);
 	}
 }

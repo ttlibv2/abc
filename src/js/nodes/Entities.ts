@@ -1,7 +1,8 @@
-import { Assert } from 'js/helper/Assert';
-import { StringReader } from '../helper/CharacterReader';
+import { Assert } from '../helper/Assert';
+import { Char } from '../helper/Char';
 import { Helper } from '../helper/Helper';
 import { StringBuilder } from '../helper/StringBuilder';
+import { CharacterReader } from '../parse/CharacterReader';
 import { Parser } from '../parse/Parser';
 import { CharsetEncoder, OutputSetting } from '../parse/Setting';
 import * as enty_json from './entities.json';
@@ -51,7 +52,7 @@ export class EscapeMode {
 	private nameVals: string[];
 
 	//
-	static readonly codeDelims: string[] = [',', ';'];
+	static readonly codeDelims: Char[] = [Char.valueOf(','), Char.valueOf(';')];
 	static readonly codepointRadix = 36;
 
 	/* eslint-disable */
@@ -76,7 +77,8 @@ export class EscapeMode {
 		let index = this.codeKeys.indexOf(codepoint);
 		if (index === -1) return Entities.emptyName;
 		else {
-			// the results are ordered so lower case versions of same codepoint come after uppercase, and we prefer to emit lower
+			// the results are ordered so lower case versions of same codepoint come after uppercase,
+			// and we prefer to emit lower
 			// (and binary search for same item with multi results is undefined
 			let isTrue = index < this.nameVals.length - 1 && this.codeKeys[index + 1];
 			return isTrue ? this.nameVals[index + 1] : this.nameVals[index];
@@ -93,24 +95,24 @@ export class EscapeMode {
 		escapeMode.codeKeys = new Array(size);
 		escapeMode.codeVals = new Array(size);
 
-		let reader = new StringReader(pointsData);
+		let reader = new CharacterReader(pointsData);
 		let radix: number = EscapeMode.codepointRadix;
 		let pos = 0;
 
 		while (!reader.isEmpty()) {
 			let name = reader.consumeTo('=');
-			reader = reader.advance();
+			reader.advance();
 
 			//
 			let cp1 = parseInt(reader.consumeToAny(EscapeMode.codeDelims), radix);
 			let codeDelim = reader.current();
 
 			//
-			reader = reader.advance();
+			reader.advance();
 			let cp2 = -1;
-			if (codeDelim === ',') {
+			if (codeDelim.equals(';')) {
 				cp2 = parseInt(reader.consumeTo(';'), radix);
-				reader = reader.advance();
+				reader.advance();
 			}
 
 			//
