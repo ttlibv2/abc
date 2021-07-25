@@ -27,6 +27,55 @@ export abstract class Token {
 	static reset(sb: StringBuilder) {
 		if (Helper.notNull(sb)) sb.delete(0, sb.length);
 	}
+
+	isDoctype(): this is Doctype {
+		return this.type === TokenType.Doctype;
+	}
+
+	asDoctype(): Doctype {
+		return <any>this;
+	}
+
+	isStartTag(): this is StartTag {
+		return this.type === TokenType.StartTag;
+	}
+
+	asStartTag(): StartTag {
+		return <any>this;
+	}
+
+	isEndTag(): this is EndTag {
+		return this.type === TokenType.EndTag;
+	}
+
+	asEndTag(): EndTag {
+		return <any>this;
+	}
+
+	isComment(): this is Comment {
+		return this.type === TokenType.Comment;
+	}
+
+	asComment(): Comment {
+		return <any>this;
+	}
+
+	isCharacter(): this is Character {
+		return this.type === TokenType.Character;
+	}
+
+	/* eslint-disable */
+	isCData(): this is CData {
+		return this instanceof CData;
+	}
+
+	asCharacter(): Character {
+		return <any>this;
+	}
+
+	isEOF(): this is EOF {
+		return this.type === TokenType.EOF;
+	}
 }
 
 export class Doctype extends Token {
@@ -121,12 +170,12 @@ export abstract class Tag extends Token {
 		this.tagName = null;
 		this.normalName = null;
 		this.pendingAttributeName = null;
-		Tag.reset(this.pendingAttributeValue);
 		this.pendingAttributeValueS = null;
 		this.hasEmptyAttributeValue = false;
 		this.hasPendingAttributeValue = false;
 		this.selfClosing = false;
 		this.attributes = null;
+		Tag.reset(this.pendingAttributeValue);
 		return this;
 	}
 

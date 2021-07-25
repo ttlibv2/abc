@@ -1,13 +1,17 @@
 import { Assert } from '../helper/Assert';
 import { Attributes } from '../nodes/Attributes';
 
+export interface CharsetEncoder {
+	canEncode(char: string): boolean;
+}
+
 export class OutputSetting {
 	prettyPrint: boolean = true;
 	indentAmount = 1;
 	outline = false;
 	syntax: 'html' | 'xml' = 'html';
 	escapeMode: any;
-	encoder: any;
+	encoder: CharsetEncoder;
 	coreCharset: any;
 
 	prepareEncoder(): this {

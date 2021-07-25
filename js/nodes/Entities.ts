@@ -1,8 +1,9 @@
-import { CharacterReader } from '../helper/CharacterReader';
+import { Assert } from 'js/helper/Assert';
+import { StringReader } from '../helper/CharacterReader';
 import { Helper } from '../helper/Helper';
 import { StringBuilder } from '../helper/StringBuilder';
 import { Parser } from '../parse/Parser';
-import { OutputSetting } from '../parse/Setting';
+import { CharsetEncoder, OutputSetting } from '../parse/Setting';
 import * as enty_json from './entities.json';
 
 export class EntitiesData {
@@ -11,16 +12,12 @@ export class EntitiesData {
 	static readonly fullPoints: string = enty_json.fullPoint;
 }
 
-export class CoreCharset {
-	static ascii = new CoreCharset();
-	static utf = new CoreCharset();
-	static fallback = new CoreCharset();
+export enum CoreCharset {
+	ascii,
 
-	static byName(name: string): CoreCharset {
-		if (name === 'US-ASCII') return CoreCharset.ascii;
-		if (name.startsWith('UTF-')) return CoreCharset.utf;
-		else return CoreCharset.fallback;
-	}
+	// covers UTF-8, UTF-16, et al
+	utf,
+	fallback,
 }
 
 export class EscapeMode {
@@ -62,11 +59,19 @@ export class EscapeMode {
 		EscapeMode.load(this, file, size);
 	}
 
+	/**
+	 * Return codepoint without name
+	 * @param name {string}
+	 */
 	codepointForName(name: string) {
 		let index = this.nameKeys.indexOf(name);
 		return this.codeVals[index] || Entities.empty;
 	}
 
+	/**
+	 * Return name of codepoint
+	 * @param codepoint {number}
+	 */
 	nameForCodepoint(codepoint: number): string {
 		let index = this.codeKeys.indexOf(codepoint);
 		if (index === -1) return Entities.emptyName;
@@ -82,13 +87,13 @@ export class EscapeMode {
 		return this.nameKeys.length;
 	}
 
-	static load(escapeMode: EscapeMode, pointsData: string, size: number) {
+	static load(escapeMode: EscapeMode, pointsData: string, size: number): void {
 		escapeMode.nameKeys = new Array(size);
 		escapeMode.nameVals = new Array(size);
 		escapeMode.codeKeys = new Array(size);
 		escapeMode.codeVals = new Array(size);
 
-		let reader = new CharacterReader(pointsData);
+		let reader = new StringReader(pointsData);
 		let radix: number = EscapeMode.codepointRadix;
 		let pos = 0;
 
@@ -117,25 +122,29 @@ export class EscapeMode {
 
 			//
 			if (cp2 !== -1) {
-				let string = [cp1, cp2].map(cp => String.fromCodePoint(cp)).join('');
+				let string = [cp1, cp2].map((cp) => String.fromCodePoint(cp)).join('');
 				EscapeMode.multipoints.set(name, string);
 			}
 			pos++;
 		}
+
+		Assert.isTrue(pos === size, 'Unexpected count of entities loaded');
 	}
 }
 
 export class Entities {
-	static readonly codepointRadix: number = 36;
 	static readonly empty: number = -1;
 	static readonly emptyName: string = '';
-	private static readonly codeDelims: string[] = [',', ';'];
-	//private static readonly multipoints: Map<string, string> = new Map(); // name -> multiple character references
-	private static readonly DefaultOutput = new OutputSetting();
+	static readonly defaultOutput = new OutputSetting();
+
+	static getCoreCharsetByName(name: string): CoreCharset {
+		if (name === 'US-ASCII') return CoreCharset.ascii;
+		if (name.startsWith('UTF-')) return CoreCharset.utf;
+		else return CoreCharset.fallback;
+	}
 
 	/**
 	 * Check if the input is a known named entity
-	 *
 	 * @param name the possible entity name (e.g. "lt" or "amp")
 	 * @return true if a known named entity
 	 */
@@ -145,10 +154,8 @@ export class Entities {
 
 	/**
 	 * Check if the input is a known named entity in the base entity set.
-	 *
 	 * @param name the possible entity name (e.g. "lt" or "amp")
 	 * @return true if a known named entity in the base set
-	 * @see #isNamedEntity(String)
 	 */
 	static isBaseNamedEntity(name: string): boolean {
 		return EscapeMode.base.codepointForName(name) !== Entities.empty;
@@ -156,12 +163,11 @@ export class Entities {
 
 	/**
 	 * Get the character(s) represented by the named entity
-	 *
 	 * @param name entity (e.g. "lt" or "amp")
 	 * @return the string value of the character(s) represented by this entity, or "" if not defined
 	 */
 	static getByName(name: string): string {
-		let val = Entities.multipoints.get(name);
+		let val = EscapeMode.multipoints.get(name);
 		if (Helper.notNull(val)) return val;
 		else {
 			let codepoint = EscapeMode.extended.codepointForName(name);
@@ -170,7 +176,7 @@ export class Entities {
 	}
 
 	static codepointsForName(name: string, codepoints: number[]): number {
-		let val = Entities.multipoints.get(name);
+		let val = EscapeMode.multipoints.get(name);
 		if (Helper.notNull(val)) {
 			codepoints[0] = val.codePointAt(0);
 			codepoints[1] = val.codePointAt(1);
@@ -185,13 +191,12 @@ export class Entities {
 	}
 
 	/**
-	 * HTML escape an input string. That is, {@code <} is returned as {@code &lt;}
-	 *
-	 * @param string the un-escaped string to escape
-	 * @param out the output settings to use
+	 * HTML escape an input string. Exam: `<` => `&lt`
+	 * @param {string} string the un-escaped string to escape
+	 * @param {OutputSetting} setting the output settings to use
 	 * @return the escaped string
 	 */
-	static escape(string: string, setting: OutputSetting = Entities.DefaultOutput): string {
+	static escape(string: string, setting: OutputSetting = Entities.defaultOutput): string {
 		if (Helper.isNull(string)) return '';
 		else {
 			let accum = new StringBuilder();
@@ -262,7 +267,7 @@ export class Entities {
 						accum.append(inAttribute ? '&quot;' : char);
 						break;
 					default:
-						let canEncode = canEncode(coreCharset, char, encoder);
+						let canEncode = Entities.canEncode(coreCharset, char, encoder);
 						if (canEncode) accum.append(char);
 						else Entities.appendEncoded(accum, escapeMode, codePoint);
 				}
@@ -290,7 +295,24 @@ export class Entities {
 	 * @param strict if "strict" (that is, requires trailing ';' char, otherwise that's optional)
 	 * @return the unescaped string
 	 */
-	unescape(string: string, strict: boolean = false) {
+	static unescape(string: string, strict: boolean = false) {
 		return Parser.unescapeEntities(string, strict);
+	}
+
+	/**
+	 * Provides a fast-path for Encoder.canEncode
+	 * @param charset {CoreCharset}
+	 * @param char {string}
+	 * @param fallback {CharsetEncoder}
+	 */
+	static canEncode(charset: CoreCharset, char: string, fallback: CharsetEncoder): boolean {
+		switch (charset) {
+			case CoreCharset.ascii:
+				return char.codePointAt(0) < 0x80;
+			case CoreCharset.utf:
+				return true;
+			default:
+				return fallback.canEncode(char);
+		}
 	}
 }
