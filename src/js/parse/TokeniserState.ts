@@ -1,21 +1,22 @@
 import { Helper } from '../helper/Helper';
 import { DocumentType } from '../nodes/DocumentType';
-import { CharReader } from './CharReader';
+import { CharacterReader } from './CharacterReader';
 import { CData, EOF } from './Token';
 import { Tokeniser } from './Tokeniser';
+import { Char } from '../helper/Char';
 
 export class TokeniserState {
 	//==========================================
-	static readonly nullChar: char = '\u0000';
-	static readonly attributeNameCharsSorted: char[] = ['\t', '\n', '\f', '\r', ' ', '"', "'", '/', '<', '=', '>'];
-	static readonly attributeValueUnquoted: char[] = ['\u0000', '\t', '\n', '\f', '\r', ' ', '"', '&', "'", '<', '=', '>', '`'];
-	static readonly replacementChar: char = Tokeniser.replacementChar;
+	static readonly nullChar: string = Char.NULL.charAt(0);
+	static readonly attributeNameCharsSorted: Char[] = Char.arrayOf(['\t', '\n', '\f', '\r', ' ', '"', "'", '/', '<', '=', '>']);
+	static readonly attributeValueUnquoted: Char[] = Char.arrayOf(['\u0000', '\t', '\n', '\f', '\r', ' ', '"', '&', "'", '<', '=', '>', '`']);
+	static readonly replacementChar: Char = Tokeniser.replacementChar;
 	static readonly replacementStr: string = String(Tokeniser.replacementChar);
-	static readonly eof:char = CharReader.EOF;
+	static readonly eof: string = CharacterReader.EOF.charAt(0);
 
-	private constructor(private readCb: (t: Tokeniser, r: CharReader, thisArgs?: any) => void) {}
+	private constructor(private readCb: (t: Tokeniser, r: CharacterReader, thisArgs?: any) => void) {}
 
-	read(t: Tokeniser, r: CharReader): void {
+	read(t: Tokeniser, r: CharacterReader): void {
 		this.readCb(t, r, this);
 	}
 
@@ -23,7 +24,7 @@ export class TokeniserState {
 	 * Handles RawtextEndTagName, ScriptDataEndTagName, and ScriptDataEscapedEndTagName. Same body impl, just
 	 * different else exit transitions.
 	 */
-	private static handleDataEndTag(t: Tokeniser, r: CharReader, elseTransition: TokeniserState): void {
+	private static handleDataEndTag(t: Tokeniser, r: CharacterReader, elseTransition: TokeniserState): void {
 		// matchesLetter
 		if (r.matchesLetter()) {
 			let name = r.consumeLetterSequence();
@@ -34,7 +35,7 @@ export class TokeniserState {
 			let needsExitTransition = !(t.isAppropriateEndTagToken() && !r.isEmpty());
 			if (!needsExitTransition) {
 				let c = r.consume();
-				switch (c) {
+				switch (c.charAt(0)) {
 					case '\t':
 					case '\n':
 					case '\r':
@@ -64,8 +65,8 @@ export class TokeniserState {
 		}
 	}
 
-	private static readRawData(t: Tokeniser, r: CharReader, current: TokeniserState, advance: TokeniserState): void {
-		switch (r.current()) {
+	private static readRawData(t: Tokeniser, r: CharacterReader, current: TokeniserState, advance: TokeniserState): void {
+		switch (r.current().charAt(0)) {
 			case '<':
 				t.advanceTransition(advance);
 				break;
@@ -91,7 +92,7 @@ export class TokeniserState {
 		t.transition(advance);
 	}
 
-	private static readEndTag(t: Tokeniser, r: CharReader, a: TokeniserState, b: TokeniserState): void {
+	private static readEndTag(t: Tokeniser, r: CharacterReader, a: TokeniserState, b: TokeniserState): void {
 		if (r.matchesLetter()) {
 			t.createTagPending(false);
 			t.transition(a);
@@ -101,7 +102,7 @@ export class TokeniserState {
 		}
 	}
 
-	private static handleDataDoubleEscapeTag(t: Tokeniser, r: CharReader, primary: TokeniserState, fallback: TokeniserState): void {
+	private static handleDataDoubleEscapeTag(t: Tokeniser, r: CharacterReader, primary: TokeniserState, fallback: TokeniserState): void {
 		if (r.matchesLetter()) {
 			let name = r.consumeLetterSequence();
 			t.dataBuffer.append(name);
@@ -129,7 +130,7 @@ export class TokeniserState {
 		}
 	}
 
-	private static anythingElse(t: Tokeniser, r: CharReader) {
+	private static anythingElse(t: Tokeniser, r: CharacterReader) {
 		t.emitString('</');
 		t.emitString(t.dataBuffer);
 		r.unconsume();

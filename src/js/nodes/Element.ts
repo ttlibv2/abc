@@ -41,7 +41,7 @@ export class Element extends Node {
 	val(val?: any): any {
 		throw new Error('Method not implemented.');
 	}
-	hasClass(className: string): unknown {
+	hasClass(className: string): boolean {
 		throw new Error('Method not implemented.');
 	}
 	toggleClass(className: string): void {

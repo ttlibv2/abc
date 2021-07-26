@@ -152,10 +152,12 @@ export class Helper {
 	}
 
 	static isLetter(str: string | Char): boolean {
+		str = Char.isChar(str) ? str.string : str;
 		return /^[a-zA-Z]+$/.test(str.toString());
 	}
 
 	static isDigit(str: string | Char): boolean {
+		str = Char.isChar(str) ? str.string : str;
 		return /^[0-9]+$/.test(str.toString());
 	}
 

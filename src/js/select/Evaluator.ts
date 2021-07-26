@@ -1,6 +1,7 @@
 import { Assert } from '../helper/Assert';
 import { Helper } from '../helper/Helper';
 import { Normalizer } from '../helper/Normalizer';
+import { Attributes } from '../nodes/Attributes';
 import { Element } from '../nodes/Element';
 
 /**
@@ -127,8 +128,7 @@ export class AttributeStartingEval extends Evaluator {
 	}
 
 	matches(root: Element, element: Element): boolean {
-		let values = element.get_attributes().asList();
-		return values.some((attr) => {
+		return element.get_attributes().some((attr) => {
 			let key = Normalizer.lowerCase(attr.get_key());
 			return key.startsWith(this.keyPrefix);
 		});
@@ -150,9 +150,9 @@ export abstract class AttributeKeyPairEval extends Evaluator {
 	 * @param {boolean=true} trimValue
 	 */
 	constructor(
-		protected key: string,
-		protected value: any,
-		protected trimValue: boolean = true
+		protected key: string, //
+		protected value: any, //
+		protected trimValue: boolean = true,
 	) {
 		super();
 
@@ -162,9 +162,9 @@ export abstract class AttributeKeyPairEval extends Evaluator {
 
 		if (typeof value === 'string') {
 			Assert.notEmpty(value);
-			let isStringLiteral =
-				(value.startsWith(`'`) && value.endsWith(`'`)) ||
-				(value.startsWith(`"`) && value.endsWith(`"`));
+			let isSingle = value.startsWith(`'`) && value.endsWith(`'`);
+			let isDouble = value.startsWith(`"`) && value.endsWith(`"`);
+			let isStringLiteral = isSingle || isDouble;
 			if (isStringLiteral) value = value.substring(1, value.length - 1);
 			this.value = Normalizer.normalize(value, trimValue && isStringLiteral);
 		} else {
@@ -423,11 +423,7 @@ export class IndexEqualEval extends IndexEvaluator {
 export class IsLastChildEval extends Evaluator {
 	matches(root: Element, element: Element): boolean {
 		let p = element.get_parent();
-		return (
-			p !== null &&
-			!Helper.isDocument(p) &&
-			p.elementSiblingIndex() === p.children().length - 1
-		);
+		return p !== null && !Helper.isDocument(p) && p.elementSiblingIndex() === p.children().length - 1;
 	}
 
 	toString(): string {
@@ -519,11 +515,7 @@ export abstract class CssNthEvaluator extends Evaluator {
 		let ps = this.getPseudoClass(),
 			a = this.a,
 			b = this.b;
-		return a === 0
-			? `:${ps}(${b})`
-			: b === 0
-			? `:${ps}(${a}n)`
-			: `:${ps}(${a}n+${b})`;
+		return a === 0 ? `:${ps}(${b})` : b === 0 ? `:${ps}(${a}n)` : `:${ps}(${a}n+${b})`;
 	}
 }
 

@@ -1,4 +1,5 @@
 import { Helper } from '../helper/Helper';
+import { NodeUtils } from '../helper/NodeUtils';
 import { Element } from '../nodes/Element';
 import { Elements } from '../nodes/Elements';
 import { Node } from '../nodes/Node';
@@ -42,15 +43,11 @@ export class Collector {
 }
 
 export class Accumulator implements NodeVisitor {
-	constructor(
-		private root: Element,
-		private elements: Elements,
-		private evaluator: Evaluator
-	) {}
+	constructor(private root: Element, private elements: Elements, private evaluator: Evaluator) {}
 
 	head(node: Node, depth: number): void {
 		let isMatch = () => this.evaluator.matches(this.root, <any>node);
-		if (Helper.isElement(node) && isMatch()) {
+		if (NodeUtils.isElement(node) && isMatch()) {
 			this.elements.add(node);
 		}
 	}
@@ -65,7 +62,7 @@ export class FirstFinder implements NodeFilter {
 
 	head(node: Node, depth: number): NodeFilterResult {
 		let isMatch = () => this.evaluator.matches(this.root, <any>node);
-		if (Helper.isElement(node) && isMatch()) {
+		if (NodeUtils.isElement(node) && isMatch()) {
 			this.match = node;
 			return NodeFilterResult.STOP;
 		} else return NodeFilterResult.CONTINUE;

@@ -22,6 +22,10 @@ export class Attributes {
 	static readonly InternalPrefix: string = '/';
 	private readonly attributes: Attribute[] = [];
 
+	some(predicate: (value: Attribute, index: number, array: Attribute[]) => boolean): boolean {
+		return this.attributes.some(predicate);
+	}
+
 	/**
 	 * Get the number of attributes in this set
 	 * @return {number}

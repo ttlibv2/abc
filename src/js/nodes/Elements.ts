@@ -45,6 +45,10 @@ export class Elements extends Array<Element> {
 		return els;
 	}
 
+	add(node: Element) {
+		this.push(node);
+	}
+
 	/**
 	 * Get an attribute value from the first matched element that has the attribute.
 	 * @param name The attribute key.
