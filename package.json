@@ -5,6 +5,7 @@
   "scripts": {},
   "private": true,
   "dependencies": {
+    "@types/google-apps-script": "1.0.37",
     "@types/method-override": "0.0.32",
     "core-js": "3.8.3",
     "htmlparser2": "6.1.0",
