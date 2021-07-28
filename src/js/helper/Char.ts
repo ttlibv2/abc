@@ -44,6 +44,10 @@ export class Char {
 		this.code = typeof value === 'number' ? value : (value || '\u0000').charCodeAt(0);
 	}
 
+	get codepoint(): number {
+		return this.code;
+	}
+
 	get num(): number {
 		return this.code;
 	}

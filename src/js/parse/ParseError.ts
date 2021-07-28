@@ -21,7 +21,10 @@ export class ParseErrorList extends Array<ParseError> {
 	 * @param initialCapacity
 	 * @param maxSize
 	 */
-	constructor(private readonly initialCapacity: number, private readonly maxSize: number) {
+	constructor(
+		private readonly initialCapacity: number, //
+		private readonly maxSize: number,
+	) {
 		super(initialCapacity);
 	}
 

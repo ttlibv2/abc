@@ -147,4 +147,8 @@ export class StringBuilder {
 	toString(): string {
 		return this.text;
 	}
+
+	isEmpty(): boolean {
+		return this.length === 0;
+	}
 }

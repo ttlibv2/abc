@@ -15,6 +15,9 @@ export class Parser {
 	// tree builder html
 	private parseAdapter: ParseApdater;
 
+	// error list
+	errors: ParseErrorList;
+
 	/**
 	 * Create new constructor
 	 * @param {HtmlParse2Adapter} adapter to use to parse input into Documents.
@@ -23,6 +26,7 @@ export class Parser {
 		Assert.notNull(adapter);
 		this.parseAdapter = adapter;
 		this.parseSetting = adapter.defaultSettings();
+		this.errors = ParseErrorList.noTracking();
 	}
 
 	/**

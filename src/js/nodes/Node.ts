@@ -242,7 +242,7 @@ export abstract class Node implements IObject {
      themselves can be manipulated.
      @return list of children. If no children, returns an empty list.
      */
-	children(): Node[] {
+	childNodes(): Node[] {
 		return this.childNodeSize() === 0 ? [] : [...this.ensureChildNodes()];
 	}
 
@@ -647,7 +647,7 @@ export abstract class Node implements IObject {
 	}
 
 	equals(object: any): boolean {
-		return Helper.equals(this, object);
+		return this === object;
 	}
 
 	/**

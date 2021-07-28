@@ -69,7 +69,7 @@ export class ParseSetting {
 	/**
 	 * normalizeAttributes
 	 */
-	normalizeAttributes(attrs: Attributes) {
+	normalizeAttributes(attrs: Attributes): Attributes {
 		attrs = Assert.notNull(attrs);
 		return !this.preserveAttributeCase ? attrs.normalize() : attrs;
 	}

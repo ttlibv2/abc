@@ -53,10 +53,13 @@ export class Element extends Node {
 	addClass(className: string): void {
 		throw new Error('Method not implemented.');
 	}
+	isFormList(): boolean {
+		throw new Error('Method not implemented.');
+	}
 	static readonly BaseUriKey = Attributes.internalKey('baseUri');
 
 	private tag: Tag;
-	private childNodes: Node[];
+	private _childNodes: Node[];
 	private attributes: Attributes;
 	private shadowChildrenRef: WeakReference<Element[]>;
 	public outputSetting: OutputSetting = new OutputSetting();

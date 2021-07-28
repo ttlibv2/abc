@@ -33,10 +33,11 @@ export class DocumentType extends LeafNode {
 		this.updatePubSyskey();
 	}
 
-	setPubSysKey(value: string) {
+	setPubSysKey(value: string) : this{
 		if (Helper.notNull(value)) {
 			this.attr(DocumentType.PUB_SYS_KEY, value);
 		}
+		return this;
 	}
 
 	/**

@@ -1,7 +1,7 @@
 import { Assert } from '../helper/Assert';
 import { Helper } from '../helper/Helper';
 import { StringBuilder } from '../helper/StringBuilder';
-import { OutputSetting } from '../parse/Setting';
+import { OutputSetting, ParseSetting } from '../parse/Setting';
 import { Attribute } from './Attribute';
 import { Document } from './Document';
 import { Entities } from './Entities';
@@ -15,6 +15,14 @@ export type AttributeFilter = (attr: Attribute, index: number, array: Attribute[
  * That means you should use lower-case strings when referring to attributes by name.
  */
 export class Attributes {
+	
+	normalize(): Attributes {
+		throw new Error('Method not implemented.');
+	}
+	deduplicate(setting: ParseSetting): number {
+		throw new Error('Method not implemented.');
+	}
+
 	dataset(): Record<string, string> {
 		throw new Error('Method not implemented.');
 	}
@@ -299,6 +307,19 @@ export class Attributes {
 
 	toString(): string {
 		return this.html();
+	}
+
+	get attrNames(): string[] {
+		return this.attributes.map(attr => attr.get_key());
+	}
+
+
+	equals(o: any): boolean {
+		if(this === o) return true;
+		if(Helper.isNull(o)) return false;
+		if(this.constructor !== o.constructor) return false;
+		else if(this.length !== o.length) return false;
+		else return !this.attributes.some((attr, pos) => !o.attributes[pos].equals(attr));
 	}
 
 	private static dataKey(key: string): string {

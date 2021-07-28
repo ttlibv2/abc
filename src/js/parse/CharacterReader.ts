@@ -31,6 +31,14 @@ export class CharacterReader {
 
 	private bufferUp(): void {}
 
+	close() {
+		if (this.reader !== null) {
+			this.reader = null;
+			this.charBuf = null;
+			this.stringCache = null;
+		}
+	}
+
 	/**
 	 * Gets the current cursor position in the content.
 	 * @return current position
@@ -89,10 +97,10 @@ export class CharacterReader {
 	}
 
 	mark() {
-		// make sure there is enough look ahead capacity
-		// if (this.bufLength - this.bufPos < CharacterReader.minReadAheadLen) this.bufSplitPoint = 0;
-		// this.bufferUp();
-		// this.bufMark = this.bufPos;
+		//make sure there is enough look ahead capacity
+		//if (this.bufLength - this.bufPos < CharacterReader.minReadAheadLen) this.bufSplitPoint = 0;
+		this.bufferUp();
+		this.bufMark = this.bufPos;
 	}
 
 	unmark(): void {
@@ -282,6 +290,13 @@ export class CharacterReader {
 	}
 
 	matchConsume(seq: string): boolean {
+		if (this.matchConsume(seq)) {
+			this.bufPos += seq.length;
+			return true;
+		} else return false;
+	}
+
+	matchConsumeIgnoreCase(seq: string): boolean {
 		if (this.matchesIgnoreCase(seq)) {
 			this.bufPos += seq.length;
 			return true;

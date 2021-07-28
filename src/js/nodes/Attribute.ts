@@ -79,8 +79,12 @@ export class Attribute implements IObject {
 		return new Attribute(this.key, this.val, null);
 	}
 
-	equals(object: any): boolean {
-		return Helper.createEqualsBuilder().append(this, object).append(this.key, object.key).isEqual();
+	equals(o: any): boolean {
+		if(this === o) return true;
+		if(Helper.isNull(o)) return false;
+		if(this.constructor !== o.constructor) return false;
+		else if(this.key !== o.key) return false;
+		else return this.val === o.key;
 	}
 
 	static shouldCollapseAttribute(key: string, val: string, setting: OutputSetting): boolean {

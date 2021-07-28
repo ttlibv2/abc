@@ -45,8 +45,9 @@ export class Elements extends Array<Element> {
 		return els;
 	}
 
-	add(node: Element) {
-		this.push(node);
+	add(node: Element, index?: number) {
+		index = index || this.length;
+		this.splice(index, 0, node);
 	}
 
 	/**

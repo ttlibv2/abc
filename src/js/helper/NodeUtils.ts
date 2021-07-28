@@ -24,7 +24,7 @@ export class NodeUtils {
 		return node instanceof Document;
 	}
 
-	static isElement(node: Node): node is Element {
+	static isElement(node: any): node is Element {
 		return node instanceof Element;
 	}
 

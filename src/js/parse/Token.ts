@@ -15,6 +15,7 @@ export enum TokenType {
 	EOF,
 }
 
+
 export abstract class Token {
 	abstract get type(): TokenType;
 
@@ -79,15 +80,37 @@ export abstract class Token {
 }
 
 export class Doctype extends Token {
-	pubSysKey = null;
-	forceQuirks = false;
-	name = new StringBuilder();
-	publicIdentifier = new StringBuilder();
-	systemIdentifier = new StringBuilder();
+  
+	private pubSysKey = null;
+	private forceQuirks = false;
+	private name = new StringBuilder();
+	private publicIdentifier = new StringBuilder();
+	private systemIdentifier = new StringBuilder();
 
 	get type(): TokenType {
 		return TokenType.Doctype;
 	}
+
+	getName(): string {
+      return this.name.toString();
+	}
+	
+	getPublicIdentifier(): string {
+		return this.publicIdentifier.toString();
+	}
+
+	getSystemIdentifier(): string {
+		return this.systemIdentifier.toString();
+	}
+
+	getPubSysKey():string {
+		return this.pubSysKey;
+  }
+
+  isForceQuirks(): boolean {
+	return this.forceQuirks;
+}
+
 
 	reset(): this {
 		Doctype.reset(this.publicIdentifier);
@@ -157,7 +180,7 @@ export abstract class Tag extends Token {
 	private static readonly MaxAttributes = 512;
 
 	protected tagName: string;
-	protected normalName: string; // lc version of tag name, for case insensitive tree build
+	protected normalName_: string; // lc version of tag name, for case insensitive tree build
 	private pendingAttributeName: string; // attribute names are generally caught in one hop, not accumulated
 	private pendingAttributeValue = new StringBuilder(); // but values are accumulated, from e.g. & in hrefs
 	private pendingAttributeValueS: string; // try to get attr vals in one shot, vs Builder
@@ -168,7 +191,7 @@ export abstract class Tag extends Token {
 
 	reset(): this {
 		this.tagName = null;
-		this.normalName = null;
+		this.normalName_ = null;
 		this.pendingAttributeName = null;
 		this.pendingAttributeValueS = null;
 		this.hasEmptyAttributeValue = false;
@@ -230,9 +253,13 @@ export abstract class Tag extends Token {
 	 * preserves case, for input into Tag.valueOf (which may drop case)
 	 * @return {string}
 	 */
-	get_tagName(): string {
+	name(): string {
 		Assert.isFalse(Helper.isEmpty(this.tagName));
 		return this.tagName;
+	}
+
+	normalName(): string {
+		return this.normalName_;
 	}
 
 	toStringName(): string {
@@ -241,7 +268,7 @@ export abstract class Tag extends Token {
 
 	set_tagName(name: string): Tag {
 		this.tagName = name;
-		this.normalName = Normalizer.lowerCase(name);
+		this.normalName_ = Normalizer.lowerCase(name);
 		return this;
 	}
 
@@ -254,7 +281,7 @@ export abstract class Tag extends Token {
 		// might have null chars - need to replace with null replacement character
 		append = append.replace(TokeniserState.nullChar, Tokeniser.replacementChar);
 		this.tagName = Helper.isNull(this.tagName) ? append : this.tagName.concat(append);
-		this.normalName = Normalizer.lowerCase(this.tagName);
+		this.normalName_ = Normalizer.lowerCase(this.tagName);
 	}
 
 	appendAttributeName(append: string) {
@@ -318,7 +345,7 @@ export class StartTag extends Tag {
 	nameAttr(name: string, attributes: Attributes): this {
 		this.tagName = name;
 		this.attributes = attributes;
-		this.normalName = Normalizer.lowerCase(name);
+		this.normalName_ = Normalizer.lowerCase(name);
 		return this;
 	}
 

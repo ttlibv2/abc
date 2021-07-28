@@ -4,6 +4,7 @@ import { EqualsBuilder } from './EqualsBuilder';
 import { Char } from './Char';
 
 export class Helper {
+	
 	// so very deeply nested nodes don't get insane padding amounts
 	private static readonly maxPaddingWidth: number = 30;
 
@@ -18,6 +19,14 @@ export class Helper {
 		return ' '.repeat(width);
 	}
 
+	static in<T>(target: T, ...array: T[]): boolean {
+		return (array || []).includes(target);
+	}
+
+	static inSorted(needle: string, haystack: string[]): boolean {
+		return haystack.includes(needle);
+	}
+	
 	//===========================================================
 
 	static isPrimitive(object: any): boolean {
@@ -32,7 +41,7 @@ export class Helper {
 		else return String(object).length === 0;
 	}
 
-	static isString(object: any): boolean {
+	static isString(object: any): object is String {
 		return typeof object === 'string';
 	}
 
