@@ -1,4 +1,5 @@
 export class Char {
+
 	//
 
 	static readonly Default = new Char();
@@ -64,26 +65,30 @@ export class Char {
 	 * Return true if equal
 	 * @param {number} charCode
 	 */
-	equal(charCode: number): boolean;
+	equals(charCode: number): boolean;
 
 	/**
 	 * Return true if equal
 	 * @param {string} string
 	 */
-	equal(string: string): boolean;
+	equals(string: string): boolean;
 
 	/**
 	 * Return true if equal
 	 * @param {Char} char
 	 */
-	equal(char: Char): boolean;
+	equals(char: Char): boolean;
 
 	/** @private */
-	equal(target: any): boolean {
+	equals(target: any): boolean {
 		if (target instanceof Char) {
 			return this.code === target.code;
 		} else if (typeof target === 'string') {
 			return this.string === target;
 		} else return this.num === target;
+	}
+
+	in(array: string[]): boolean {
+		throw new Error('Method not implemented.');
 	}
 }

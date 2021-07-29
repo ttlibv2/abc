@@ -16,7 +16,7 @@ import { Comment } from '../nodes/Comment';
 import { CDataNode } from '../nodes/CDataNode';
 import { DataNode } from '../nodes/DataNode';
 import { TextNode } from '../nodes/TextNode';
-import {HtmlState} from './HtmlState';
+import {HtmlState, HtmlStateCls} from './HtmlState';
 
 export class HtmlBuilder extends TreeBuilder {
 	static readonly TagsSearchInScope: string[] = ['applet', 'caption', 'html', 'marquee', 'object', 'table', 'td', 'th'];
@@ -57,7 +57,7 @@ export class HtmlBuilder extends TreeBuilder {
 		return ParseSetting.htmlDefault;
 	}
 
-	newInstace(): TreeBuilder {
+	newInstance(): TreeBuilder {
 		return new HtmlBuilder();
 	}
 
@@ -65,7 +65,7 @@ export class HtmlBuilder extends TreeBuilder {
 		super.initialiseParse(input, baseUri, parser);
 
 		// this is a bit mucky. todo - probably just create new parser objects to ensure all reset.
-		this.state = HtmlState.Initial;
+		this.state = HtmlStateCls.Initial;
 		this.originalState = null;
 		this.baseUriSetFromDoc = false;
 		this.headElement = null;
@@ -81,7 +81,7 @@ export class HtmlBuilder extends TreeBuilder {
 
 	parseFragment(inputFragment: string, context: Element, baseUri: string, parser: Parser): Node[] {
 		// context may be null
-		this.state = HtmlState.Initial;
+		this.state = HtmlStateCls.Initial;
 		this.initialiseParse(inputFragment, baseUri, parser);
 		this.contextElement = context;
 		this.fragmentParsing = true;
@@ -191,7 +191,7 @@ export class HtmlBuilder extends TreeBuilder {
 
 	error(state: HtmlState | string): void {
 		if (this.parser.errors.canAddError()) {
-			let errorMsg = Helper.isString(state) ? state : `'Unexpected token [${this.currentToken.type}] when in state [${state}]`;
+			let errorMsg = Helper.isString(state) ? state : `'Unexpected token [${this.currentToken.tokenType}] when in state [${state}]`;
 			this.parser.errors.push(new ParseError(this.reader.pos(), errorMsg));
 		}
 	}
@@ -445,18 +445,18 @@ export class HtmlBuilder extends TreeBuilder {
 			}
 
 			let name = node?.normalName() || '';
-			if ('select' === name) this.transition(HtmlState.InSelect);
-			else if ('td' === name || ('th' === name && !last)) this.transition(HtmlState.InCell);
-			else if ("tr" === name) this.transition(HtmlState.InRow);
-			else if ("tbody" === name || "thead" === name || "tfoot" === name) this.transition(HtmlState.InTableBody);
-			else if ("caption" === name) this.transition(HtmlState.InCaption);
-			else if ("colgroup" === name) this.transition(HtmlState.InColumnGroup);
-			else if ("table" === name) this.transition(HtmlState.InTable);
-			else if ("head" === name && !last) this.transition(HtmlState.InHead);
-			else if ("body" === name) this.transition(HtmlState.InBody);
-			else if ("frameset" === name) this.transition(HtmlState.InFrameset);
-			else if ("html" === name) this.transition(Helper.isNull(this.headElement) ? HtmlState.BeforeHead : HtmlState.AfterHead);
-			else if (last) this.transition(HtmlState.InBody);
+			if ('select' === name) this.transition(HtmlStateCls.InSelect);
+			else if ('td' === name || ('th' === name && !last)) this.transition(HtmlStateCls.InCell);
+			else if ("tr" === name) this.transition(HtmlStateCls.InRow);
+			else if ("tbody" === name || "thead" === name || "tfoot" === name) this.transition(HtmlStateCls.InTableBody);
+			else if ("caption" === name) this.transition(HtmlStateCls.InCaption);
+			else if ("colgroup" === name) this.transition(HtmlStateCls.InColumnGroup);
+			else if ("table" === name) this.transition(HtmlStateCls.InTable);
+			else if ("head" === name && !last) this.transition(HtmlStateCls.InHead);
+			else if ("body" === name) this.transition(HtmlStateCls.InBody);
+			else if ("frameset" === name) this.transition(HtmlStateCls.InFrameset);
+			else if ("html" === name) this.transition(Helper.isNull(this.headElement) ? HtmlStateCls.BeforeHead : HtmlStateCls.AfterHead);
+			else if (last) this.transition(HtmlStateCls.InBody);
 		}
 	}
 
@@ -490,7 +490,7 @@ export class HtmlBuilder extends TreeBuilder {
 		}
 	}
 
-	inScope(target: string | string[], extras: string[]): boolean {
+	inScope(target: string | string[], extras?: string[]): boolean {
 		if (Array.isArray(target)) return this.inSpecificScope(target, HtmlBuilder.TagsSearchInScope, null);
 		else if (typeof target === 'string') {
 			return this.inSpecificScope(target, HtmlBuilder.TagsSearchInScope, extras || null);
@@ -717,11 +717,8 @@ export class HtmlBuilder extends TreeBuilder {
 		else fosterParent.appendChild(input);
 	}
 
-	protected isContentForTagData(normalName: string): boolean {
+	 isContentForTagData(normalName: string): boolean {
 		return normalName === 'script' || normalName === 'style';
 	}
 
 }
-
-//---------------------------------------------
-

@@ -43,7 +43,7 @@ export abstract class TreeBuilder {
 		this.baseUri = baseUri;
 	}
 
-	protected parse(input: string, baseUri: string, parser: Parser): Document {
+	parse(input: string, baseUri: string, parser: Parser): Document {
 		this.initialiseParse(input, baseUri, parser);
 		try {
 			this.runParser();
@@ -61,7 +61,7 @@ export abstract class TreeBuilder {
 	 * Create a new copy of this TreeBuilder
 	 * @return copy, ready for a new parse
 	 */
-	abstract newInstace(): TreeBuilder;
+	abstract newInstance(): TreeBuilder;
 
 	abstract parseFragment(inputFragment: string, context: Element, baseUri: string, parser: Parser): Node[];
 
@@ -77,6 +77,10 @@ export abstract class TreeBuilder {
 
 	protected abstract process(token: Token): boolean;
 
+	getStack(): Element[] {
+		return this.stack;
+	}
+
 	processStartTag(name: string, attrs?: Attributes): boolean {
 		let bool = this.currentToken === this.start;
 		let token = bool ? new StartTag() : this.start.reset();
@@ -84,13 +88,13 @@ export abstract class TreeBuilder {
 		return this.process(hasAttr ? token.nameAttr(name, attrs) : token.set_tagName(name));
 	}
 
-	protected processEndTag(name: string): boolean {
+	 processEndTag(name: string): boolean {
 		let bool = this.currentToken === this.end;
 		let token = bool ? new EndTag() : this.end.reset();
 		return this.process(token.set_tagName(name));
 	}
 
-	protected currentElement(): Element {
+	currentElement(): Element {
 		let size = this.stack.length;
 		return size > 0 ? this.stack[size - 1] : null;
 	}
@@ -110,7 +114,7 @@ export abstract class TreeBuilder {
 	 * (An internal method, visible for Element.
 	 * For HTML parse, signals that script and style text should be treated as Data Nodes).
 	 */
-	protected isContentForTagData(normalName: string): boolean {
+	isContentForTagData(normalName: string): boolean {
 		return false;
 	}
 }

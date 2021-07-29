@@ -94,9 +94,9 @@ export class TextNode extends LeafNode {
 		this.text(head);
 
 		let tailNode = new TextNode(tail);
-		if (this.parent !== null) {
+		if (this._parent !== null) {
 			let index = this.getSiblingIndex() + 1;
-			this.parent?.addChildren([tailNode], index);
+			this._parent?.addChildren([tailNode], index);
 		}
 
 		return tailNode;

@@ -50,6 +50,11 @@ export class Attributes {
 		return this.length === 0;
 	}
 
+	get_all():Attribute[] {
+	return this.attributes;
+	}
+	
+
 	/**
 	 * Get an attribute
 	 * @param name the (case-sensitive) attribute key

@@ -246,7 +246,7 @@ export class Tokeniser {
 	 */
 	consumeCharacterReference(additionalAllowedCharacter: Character, inAttr: boolean): number[] {
 		if (this.reader.isEmpty()) return null;
-		else if (Helper.notNull(additionalAllowedCharacter) && this.reader.current().equal(additionalAllowedCharacter.getData())) return null;
+		else if (Helper.notNull(additionalAllowedCharacter) && this.reader.current().equals(additionalAllowedCharacter.getData())) return null;
 		else if (this.reader.matchesAnySorted(Tokeniser.notCharRefCharsSorted)) return null;
 		else {
 			let codeRef = this.codepointHolder;

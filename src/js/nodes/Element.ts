@@ -130,7 +130,7 @@ export class Element extends Node {
 	}
 
 	get parentNode(): Element {
-		return <any>super.parent;
+		return <any>super._parent;
 	}
 
 	get_attributes(): Attributes {

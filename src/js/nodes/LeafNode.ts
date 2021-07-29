@@ -80,7 +80,7 @@ export abstract class LeafNode extends Node {
 
 	/** @override */
 	baseUri(): string {
-		return this.parent?.baseUri() || '';
+		return this._parent?.baseUri() || '';
 	}
 
 	/** @override */

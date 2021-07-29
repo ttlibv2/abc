@@ -2,30 +2,31 @@ import { Assert } from '../helper/Assert';
 import { Document } from '../nodes/Document';
 import { Element } from '../nodes/Element';
 import { Node } from '../nodes/Node';
-import { HtmlParse2Adapter, ParseApdater } from './Apdater';
 import { ParseSetting } from './Setting';
 import { ParseErrorList } from './ParseError';
 import { Tokeniser } from './Tokeniser';
 import { CharacterReader } from './CharacterReader';
+import { TreeBuilder } from './TreeBuilder';
+import { HtmlBuilder } from './HtmlBuilder';
 
 export class Parser {
 	// parse setting
 	private parseSetting: ParseSetting;
 
 	// tree builder html
-	private parseAdapter: ParseApdater;
+	private treeBuilder: TreeBuilder;
 
 	// error list
 	errors: ParseErrorList;
 
 	/**
 	 * Create new constructor
-	 * @param {HtmlParse2Adapter} adapter to use to parse input into Documents.
+	 * @param {TreeBuilder} treeBuilder to use to parse input into Documents.
 	 * */
-	constructor(adapter: ParseApdater) {
-		Assert.notNull(adapter);
-		this.parseAdapter = adapter;
-		this.parseSetting = adapter.defaultSettings();
+	constructor(treeBuilder: TreeBuilder) {
+		Assert.notNull(treeBuilder);
+		this.treeBuilder = treeBuilder;
+		this.parseSetting = treeBuilder.defaultSetting();
 		this.errors = ParseErrorList.noTracking();
 	}
 
@@ -50,10 +51,10 @@ export class Parser {
 
 	/**
 	 * Set the parse adapter
-	 * @param {ParseApdater} adapter
+	 * @param {TreeBuilder} adapter
 	 */
-	set_adapter(adapter: ParseApdater) {
-		this.parseAdapter = adapter;
+	set_builder(adapter: TreeBuilder) {
+		this.treeBuilder = adapter;
 		return this;
 	}
 
@@ -64,7 +65,7 @@ export class Parser {
 	 * @return a copied parser
 	 */
 	newInstance(): Parser {
-		let builder = this.parseAdapter.newInstance();
+		let builder = this.treeBuilder.newInstance();
 		return new Parser(builder);
 	}
 
@@ -74,7 +75,7 @@ export class Parser {
 	 * @param {string=} baseUri
 	 */
 	parseDoc(html: string, baseUri?: string): Document {
-		return this.parseAdapter.parseDoc(html, baseUri);
+		return this.treeBuilder.parse(html, baseUri, this);
 	}
 
 	/**
@@ -85,11 +86,7 @@ export class Parser {
 	 * @return {Node[]}
 	 */
 	parseFragment(fragmentHtml: string, context: Element, baseUri?: string): Node[] {
-		return this.parseAdapter.parseFragment(fragmentHtml, context, baseUri);
-	}
-
-	parseBodyFragment(bodyHtml: string, baseUri?: string): Document {
-		throw new Error('Method not implemented.');
+		return this.treeBuilder.parseFragment(fragmentHtml, context, baseUri, this);
 	}
 
 	/**
@@ -97,7 +94,7 @@ export class Parser {
 	 * and style text should be treated as Data Nodes).
 	 */
 	isContentForTagData(normalName: string): boolean {
-		return this.parseAdapter.isContentForTagData(normalName);
+		return this.treeBuilder.isContentForTagData(normalName);
 	}
 
 	//------------------ STATIC FNC --------------------
@@ -108,7 +105,7 @@ export class Parser {
 	 * @return a new HTML parser.
 	 */
 	static htmlParser(): Parser {
-		return new Parser(new HtmlParse2Adapter());
+		return new Parser(new HtmlBuilder());
 	}
 
 	static parse(html: string, baseUri?: string): Document {
@@ -116,7 +113,17 @@ export class Parser {
 	}
 
 	static parseBodyFragment(bodyHtml: string, baseUri?: string): Document {
-		return Parser.htmlParser().parseBodyFragment(bodyHtml, baseUri);
+		let doc = Document.createShell(baseUri);
+        let body: Element = doc.body();
+        let nodes = Parser.parseFragment(bodyHtml, body, baseUri);
+		nodes.slice().reverse().forEach(node => node.remove());
+		nodes.forEach(node => body.appendChild(node));
+        return doc;
+	}
+
+	static parseFragment(fragmentHtml: string, context: Element, baseUri: string) {
+		let treeBuilder = new HtmlBuilder();
+        return treeBuilder.parseFragment(fragmentHtml, context, baseUri, new Parser(treeBuilder));
 	}
 
 	/**

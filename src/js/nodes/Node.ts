@@ -6,7 +6,8 @@ import { Parser } from '../parse/Parser';
 import { OutputSetting } from '../parse/Setting';
 import { NodeFilter } from '../select/NodeFilter';
 import { NodeTraversor } from '../select/NodeTraversor';
-import { NodeVisitor } from '../select/NodeVisitor';
+import { NodeVisitor, NodeVisitorCallback } from '../select/NodeVisitor';
+import { Attribute } from './Attribute';
 import { Attributes } from './Attributes';
 import { Document } from './Document';
 import { Element } from './Element';
@@ -39,19 +40,17 @@ class OuterHtmlVisitor implements NodeVisitor {
  * Elements, Documents, Comments etc are all Node instances.
  */
 export abstract class Node implements IObject {
+
 	/** Parent of the node */
-	protected parent: Node | null = null;
-
-	siblingIndex: number = -1;
-
-	//constructor() {}
+	private _parent: Node;
+	private _siblingIndex: number;
 
 	/**
 	 * Checks if this node has a parent.
 	 * @return {boolean}
 	 */
 	hasParent(): boolean {
-		return this.parent !== null;
+		return this._parent !== null;
 	}
 
 	/**
@@ -96,13 +95,13 @@ export abstract class Node implements IObject {
 	 * @return topmost ancestor.
 	 */
 	get rootNode(): any {
-		let node = this.parent;
-		while (node !== null) node = node.parent;
+		let node = this._parent;
+		while (node !== null) node = node._parent;
 		return node;
 	}
 
 	get parentNode(): any {
-		return this.parent;
+		return this._parent;
 	}
 
 	getSiblingIndex() {
@@ -143,9 +142,15 @@ export abstract class Node implements IObject {
 	attr(attrs: Record<string, string | null>): this;
 
 	/**
+	 * Set an attribute (key=value). If the attribute already exists, it is replaced.
+	 * @param {Record<string, string | null>} attrs The object attribute
+	 */
+	 attr(attr: Attribute): this;
+
+	/**
 	 * @private
 	 */
-	attr(name: string | Record<string, string | null>, value?: string): any {
+	attr(name: string | Record<string, string | null> | Attribute, value?: string): any {
 		// Set an attribute (key=value)
 		if (value !== undefined && typeof name === 'string') {
 			return this.set_attr(name, value);
@@ -154,6 +159,13 @@ export abstract class Node implements IObject {
 		// Get an attribute
 		else if (typeof name === 'string') {
 			return this.get_attr(name);
+		}
+
+		// Set an attribute (Attribute)
+		else if(name instanceof Attribute) {
+			let attr: Attribute = name;
+			this.set_attr(attr.get_key(), attr.get_val());
+			return this;
 		}
 
 		// Set an attribute (Record<string, string | null>)
@@ -272,8 +284,8 @@ export abstract class Node implements IObject {
 	 * If this node has children, they are also removed.
 	 */
 	remove() {
-		Assert.notNull(this.parent);
-		this.parent?.removeChild(this);
+		Assert.notNull(this._parent);
+		this._parent?.removeChild(this);
 	}
 
 	/**
@@ -300,8 +312,8 @@ export abstract class Node implements IObject {
 		if (typeof object === 'string') {
 			return this.addSiblingHtml(this.siblingIndex, object);
 		} else {
-			Assert.notNull(this.parent);
-			this.parent?.addChildren([object], this.siblingIndex);
+			Assert.notNull(this._parent);
+			this._parent?.addChildren([object], this.siblingIndex);
 			return this;
 		}
 	}
@@ -331,18 +343,18 @@ export abstract class Node implements IObject {
 		if (typeof node === 'string') {
 			return this.addSiblingHtml(index, node);
 		} else {
-			Assert.notNull(this.parent);
-			this.parent?.addChildren([node], index);
+			Assert.notNull(this._parent);
+			this._parent?.addChildren([node], index);
 			return this;
 		}
 	}
 
 	private addSiblingHtml(index: number, html: string) {
 		Assert.notNull(html);
-		Assert.notNull(this.parent);
-		let context: any = this.parent instanceof Element ? this.parent : null;
+		Assert.notNull(this._parent);
+		let context: any = this._parent instanceof Element ? this._parent : null;
 		let nodes = Parser.getParserForNode(this).parseFragment(html, context, this.baseUri());
-		this.parent?.addChildren(nodes, index);
+		this._parent?.addChildren(nodes, index);
 		return this;
 	}
 
@@ -356,13 +368,13 @@ export abstract class Node implements IObject {
 	 */
 	wrap(html: string): this {
 		Assert.notEmpty(html);
-		let context: any = this.parent !== null && this.parent instanceof Element ? this.parent : this instanceof Element ? this : null;
+		let context: any = this._parent !== null && this._parent instanceof Element ? this._parent : this instanceof Element ? this : null;
 
 		let wrapChild = this.parser().parseFragment(html, context, this.baseUri());
 		let firstWrap = wrapChild[0];
 		if (firstWrap instanceof Element) {
 			let deepest = this.getDeepChild(firstWrap);
-			if (this.parent !== null) this.parent.replaceChild(this, firstWrap);
+			if (this._parent !== null) this._parent.replaceChild(this, firstWrap);
 
 			// side effect of tricking wrapChildren to lose first
 			deepest.addChildren([this]);
@@ -372,7 +384,7 @@ export abstract class Node implements IObject {
 				for (let i = 0; i < wrapChild.length; i++) {
 					let remainder = wrapChild[i];
 					if (firstWrap === remainder) continue;
-					if (remainder.parent !== null) remainder.parent?.removeChild(remainder);
+					if (remainder._parent !== null) remainder._parent?.removeChild(remainder);
 					firstWrap.after(remainder);
 				}
 			}
@@ -387,10 +399,10 @@ export abstract class Node implements IObject {
 	 * @return the first child of this node
 	 */
 	unwrap(): Node | null {
-		Assert.notNull(this.parent);
+		Assert.notNull(this._parent);
 		let childNodes = this.ensureChildNodes();
 		let firstChild = childNodes.length > 0 ? childNodes[0] : null;
-		this.parent?.addChildren(childNodes, this.siblingIndex);
+		this._parent?.addChildren(childNodes, this.siblingIndex);
 		this.remove();
 		return firstChild;
 	}
@@ -411,8 +423,8 @@ export abstract class Node implements IObject {
 	 */
 	replaceWith(node: Node) {
 		Assert.notNull(node);
-		Assert.notNull(this.parent);
-		this.parent?.replaceChild(this, node);
+		Assert.notNull(this._parent);
+		this._parent?.replaceChild(this, node);
 	}
 
 	/**
@@ -421,8 +433,8 @@ export abstract class Node implements IObject {
 	 */
 	protected setParentNode(parent: Node) {
 		Assert.notNull(parent);
-		if (this.parent !== null) this.parent.removeChild(this);
-		this.parent = parent;
+		if (this._parent !== null) this._parent.removeChild(this);
+		this._parent = parent;
 	}
 
 	/**
@@ -431,18 +443,18 @@ export abstract class Node implements IObject {
 	 * @param {Node} nodeIn
 	 */
 	replaceChild(nodeOut: Node, nodeIn: Node) {
-		Assert.isTrue(nodeOut.parent === this);
+		Assert.isTrue(nodeOut._parent === this);
 		Assert.notNull(nodeIn);
 
-		if (nodeIn.parent !== null) {
-			nodeIn.parent.removeChild(nodeIn);
+		if (nodeIn._parent !== null) {
+			nodeIn._parent.removeChild(nodeIn);
 		}
 
 		let index = nodeOut.siblingIndex;
 		this.ensureChildNodes()[index] = nodeIn;
-		nodeIn.parent = this;
+		nodeIn._parent = this;
 		nodeIn.siblingIndex = index;
-		nodeOut.parent = null;
+		nodeOut._parent = null;
 	}
 
 	/**
@@ -450,11 +462,11 @@ export abstract class Node implements IObject {
 	 * @param {Node} nodeOut
 	 */
 	protected removeChild(nodeOut: Node) {
-		Assert.isTrue(nodeOut.parent === this);
+		Assert.isTrue(nodeOut._parent === this);
 		let index = nodeOut.siblingIndex;
 		this.ensureChildNodes().splice(index, 1);
 		this.reindexChildren(index);
-		nodeOut.parent = null;
+		nodeOut._parent = null;
 	}
 
 	addChildren(children: Node[], index?: number) {
@@ -479,7 +491,7 @@ export abstract class Node implements IObject {
 			let nodes = this.ensureChildNodes();
 
 			// fast path - if used as a wrap (index=0, children = child[0].parent.children - do inplace
-			let firstParent = children[0].parent;
+			let firstParent = children[0]._parent;
 			if (firstParent !== null && firstParent.childNodeSize() === children.length) {
 				let sameList = true;
 				let firstParentNodes = firstParent.ensureChildNodes();
@@ -497,7 +509,7 @@ export abstract class Node implements IObject {
 					firstParent.empty();
 					nodes.splice(index, 0, ...children);
 					i = children.length;
-					while (i-- > 0) children[i].parent = this;
+					while (i-- > 0) children[i]._parent = this;
 					this.reindexChildren(index);
 					return;
 				}
@@ -526,8 +538,8 @@ export abstract class Node implements IObject {
 	 * @return node siblings. If the node has no parent, returns an empty list.
 	 */
 	siblingNodes(): Node[] {
-		if (this.parent === null) return [];
-		let nodes = this.parent?.ensureChildNodes();
+		if (this._parent === null) return [];
+		let nodes = this._parent?.ensureChildNodes();
 		return nodes.filter((node) => node !== this);
 	}
 
@@ -536,8 +548,8 @@ export abstract class Node implements IObject {
 	 * @return next sibling, or @{code null} if this is the last sibling
 	 */
 	nextSibling(): Node | null {
-		if (this.parent !== null) {
-			let siblings = this.parent.ensureChildNodes();
+		if (this._parent !== null) {
+			let siblings = this._parent.ensureChildNodes();
 			let index = this.siblingIndex + 1;
 			if (siblings.length > index) return siblings[index];
 		}
@@ -549,8 +561,8 @@ export abstract class Node implements IObject {
 	 * @return the previous sibling, or @{code null} if this is the first sibling
 	 */
 	prevSibling(): Node | null {
-		if (this.parent !== null && this.siblingIndex > 0) {
-			return this.parent.ensureChildNodes()[this.siblingIndex - 1];
+		if (this._parent !== null && this.siblingIndex > 0) {
+			return this._parent.ensureChildNodes()[this.siblingIndex - 1];
 		} else return null;
 	}
 

@@ -194,7 +194,7 @@ export class CharacterReader {
 
 	// < | nullChar
 	consumeRawData(): string {
-		return this.returnConsume(this.charBuf.slice(this.bufPos).findIndex((ch) => ch.equals('<') || ch === Char.NULL));
+		return this.returnConsume(this.charBuf.slice(this.bufPos).findIndex((ch) => ch.equals('<') || ch === Char.Default));
 	}
 
 	// '\t', '\n', '\r', '\f', ' ', '/', '>'
@@ -331,7 +331,7 @@ export class CharacterReader {
 		let hash = Array(count)
 			.fill(1)
 			.map((_, i) => charBuf[start + i])
-			.reduce((v, c) => 31 * v + c.charCode, 0);
+			.reduce((v, c) => 31 * v + c.num, 0);
 
 		// get from cache
 		let index = hash & (CharacterReader.stringCacheSize - 1);

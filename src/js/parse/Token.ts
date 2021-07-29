@@ -17,7 +17,7 @@ export enum TokenType {
 
 
 export abstract class Token {
-	abstract get type(): TokenType;
+	abstract get tokenType(): TokenType;
 
 	/**
 	 * Reset the data represent by this token, for reuse. Prevents the need to create transfer objects for every
@@ -30,7 +30,7 @@ export abstract class Token {
 	}
 
 	isDoctype(): this is Doctype {
-		return this.type === TokenType.Doctype;
+		return this.tokenType === TokenType.Doctype;
 	}
 
 	asDoctype(): Doctype {
@@ -38,7 +38,7 @@ export abstract class Token {
 	}
 
 	isStartTag(): this is StartTag {
-		return this.type === TokenType.StartTag;
+		return this.tokenType === TokenType.StartTag;
 	}
 
 	asStartTag(): StartTag {
@@ -46,7 +46,7 @@ export abstract class Token {
 	}
 
 	isEndTag(): this is EndTag {
-		return this.type === TokenType.EndTag;
+		return this.tokenType === TokenType.EndTag;
 	}
 
 	asEndTag(): EndTag {
@@ -54,7 +54,7 @@ export abstract class Token {
 	}
 
 	isComment(): this is Comment {
-		return this.type === TokenType.Comment;
+		return this.tokenType === TokenType.Comment;
 	}
 
 	asComment(): Comment {
@@ -62,7 +62,7 @@ export abstract class Token {
 	}
 
 	isCharacter(): this is Character {
-		return this.type === TokenType.Character;
+		return this.tokenType === TokenType.Character;
 	}
 
 	/* eslint-disable */
@@ -75,8 +75,9 @@ export abstract class Token {
 	}
 
 	isEOF(): this is EOF {
-		return this.type === TokenType.EOF;
+		return this.tokenType === TokenType.EOF;
 	}
+
 }
 
 export class Doctype extends Token {
@@ -87,7 +88,7 @@ export class Doctype extends Token {
 	private publicIdentifier = new StringBuilder();
 	private systemIdentifier = new StringBuilder();
 
-	get type(): TokenType {
+	get tokenType(): TokenType {
 		return TokenType.Doctype;
 	}
 
@@ -122,7 +123,7 @@ export class Doctype extends Token {
 	}
 
 	isDoctype(): boolean {
-		return this.type === TokenType.Doctype;
+		return this.tokenType === TokenType.Doctype;
 	}
 
 	asDoctype(): Doctype {
@@ -130,7 +131,7 @@ export class Doctype extends Token {
 	}
 
 	isStartTag(): boolean {
-		return this.type === TokenType.StartTag;
+		return this.tokenType === TokenType.StartTag;
 	}
 
 	asStartTag(): StartTag {
@@ -138,7 +139,7 @@ export class Doctype extends Token {
 	}
 
 	isEndTag(): boolean {
-		return this.type === TokenType.EndTag;
+		return this.tokenType === TokenType.EndTag;
 	}
 
 	asEndTag(): EndTag {
@@ -146,7 +147,7 @@ export class Doctype extends Token {
 	}
 
 	isComment(): boolean {
-		return this.type === TokenType.Comment;
+		return this.tokenType === TokenType.Comment;
 	}
 
 	asComment(): Comment {
@@ -154,7 +155,7 @@ export class Doctype extends Token {
 	}
 
 	isCharacter(): boolean {
-		return this.type === TokenType.Character;
+		return this.tokenType === TokenType.Character;
 	}
 
 	/* eslint-disable */
@@ -167,7 +168,7 @@ export class Doctype extends Token {
 	}
 
 	isEOF(): boolean {
-		return this.type === TokenType.EOF;
+		return this.tokenType === TokenType.EOF;
 	}
 }
 
@@ -187,7 +188,11 @@ export abstract class Tag extends Token {
 	private hasEmptyAttributeValue: boolean = false; // distinguish boolean attribute from empty string value
 	private hasPendingAttributeValue: boolean = false;
 	selfClosing = false;
-	attributes: Attributes; // start tags get attributes on construction. End tags get attributes on first new attribute (but only for parser convenience, not used).
+
+	// start tags get attributes on construction. 
+	// End tags get attributes on first new attribute 
+	// (but only for parser convenience, not used).
+	attributes: Attributes; 
 
 	reset(): this {
 		this.tagName = null;
@@ -200,6 +205,10 @@ export abstract class Tag extends Token {
 		this.attributes = null;
 		Tag.reset(this.pendingAttributeValue);
 		return this;
+	}
+
+	get_attr(name: string): string {
+		return this.attributes?.get(name)?.get_key() || '';
 	}
 
 	newAttribute(): void {
@@ -279,14 +288,14 @@ export abstract class Tag extends Token {
 	// these appenders are rarely hit in not null state-- caused by null chars.
 	appendTagName(append: string) {
 		// might have null chars - need to replace with null replacement character
-		append = append.replace(TokeniserState.nullChar, Tokeniser.replacementChar);
+		append = append.replace(TokeniserState.nullChar, Tokeniser.replacementChar.string);
 		this.tagName = Helper.isNull(this.tagName) ? append : this.tagName.concat(append);
 		this.normalName_ = Normalizer.lowerCase(this.tagName);
 	}
 
 	appendAttributeName(append: string) {
 		// might have null chars because we eat in one pass - need to replace with null replacement character
-		append = append.replace(TokeniserState.nullChar, Tokeniser.replacementChar);
+		append = append.replace(TokeniserState.nullChar, Tokeniser.replacementChar.string);
 		this.pendingAttributeName = Helper.isNull(this.pendingAttributeName) ? append : this.pendingAttributeName.concat(append);
 	}
 
@@ -332,7 +341,7 @@ export abstract class Tag extends Token {
 }
 
 export class StartTag extends Tag {
-	get type(): TokenType {
+	get tokenType(): TokenType {
 		return TokenType.StartTag;
 	}
 
@@ -357,7 +366,7 @@ export class StartTag extends Tag {
 }
 
 export class EndTag extends Tag {
-	get type(): TokenType {
+	get tokenType(): TokenType {
 		return TokenType.EndTag;
 	}
 
@@ -371,7 +380,7 @@ export class Comment extends Token {
 	dataS: string; // try to get in one shot
 	bogus = false;
 
-	get type(): TokenType {
+	get tokenType(): TokenType {
 		throw new Error('Method not implemented.');
 	}
 
@@ -414,7 +423,7 @@ export class Character extends Token {
 		this.data(data);
 	}
 
-	get type(): TokenType {
+	get tokenType(): TokenType {
 		return TokenType.Character;
 	}
 
@@ -444,7 +453,7 @@ export class CData extends Character {
 }
 
 export class EOF extends Token {
-	get type(): TokenType {
+	get tokenType(): TokenType {
 		return TokenType.EOF;
 	}
 
